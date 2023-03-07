@@ -10,7 +10,7 @@ Reference:
 
 """
 
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 
 from ..feature_column import get_linear_logit, input_from_feature_columns
 from ..utils import DNN_SCOPE_NAME, deepctr_model_fn, variable_scope

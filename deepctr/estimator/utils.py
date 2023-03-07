@@ -1,4 +1,4 @@
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 from tensorflow.python.estimator.canned.head import _Head
 from tensorflow.python.estimator.canned.optimizers import get_optimizer_instance
 

@@ -1,4 +1,4 @@
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 
 
 def input_fn_pandas(df, features, label=None, batch_size=256, num_epochs=1, shuffle=False, queue_capacity_factor=10,
@@ -7,12 +7,6 @@ def input_fn_pandas(df, features, label=None, batch_size=256, num_epochs=1, shuf
         y = df[label]
     else:
         y = None
-    if tf.__version__ >= "2.0.0":
-        return tf.compat.v1.estimator.inputs.pandas_input_fn(df[features], y, batch_size=batch_size,
-                                                             num_epochs=num_epochs,
-                                                             shuffle=shuffle,
-                                                             queue_capacity=batch_size * queue_capacity_factor,
-                                                             num_threads=num_threads)
 
     return tf.estimator.inputs.pandas_input_fn(df[features], y, batch_size=batch_size, num_epochs=num_epochs,
                                                shuffle=shuffle, queue_capacity=batch_size * queue_capacity_factor,
@@ -32,21 +26,20 @@ def input_fn_tfrecord(filenames, feature_description, label=None, batch_size=256
             return features, labels
         return features
 
-    def input_fn():
+    def input_fn(mode, input_context=None):
         dataset = tf.data.TFRecordDataset(filenames)
+        if input_context:
+            dataset = dataset.shard(input_context.num_input_pipelines,
+                                    input_context.input_pipeline_id)
         dataset = dataset.map(_parse_examples, num_parallel_calls=num_parallel_calls)
         if shuffle_factor > 0:
-            dataset = dataset.shuffle(buffer_size=batch_size * shuffle_factor)
+            dataset = dataset.shuffle(buffer_size=batch_size * shuffle_factor, reshuffle_each_iteration=False)
 
-        dataset = dataset.repeat(num_epochs).batch(batch_size)
-
+        dataset = dataset.repeat(num_epochs).batch(batch_size, drop_remainder=True)
+        
         if prefetch_factor > 0:
             dataset = dataset.prefetch(buffer_size=batch_size * prefetch_factor)
-        try:
-            iterator = dataset.make_one_shot_iterator()
-        except AttributeError:
-            iterator = tf.compat.v1.data.make_one_shot_iterator(dataset)
 
-        return iterator.get_next()
+        return dataset
 
     return input_fn
