@@ -9,23 +9,12 @@ Author:
 import tensorflow as tf
 
 try:
-    from tensorflow.python.ops.init_ops import Zeros
-except ImportError:
-    from tensorflow.python.ops.init_ops_v2 import Zeros
-from tensorflow.python.keras.layers import Layer, Activation
-
-try:
-    from tensorflow.python.keras.layers import BatchNormalization
-except ImportError:
-    BatchNormalization = tf.keras.layers.BatchNormalization
-
-try:
     unicode
 except NameError:
     unicode = str
 
 
-class Dice(Layer):
+class Dice(tf.keras.layers.Layer):
     """The Data Adaptive Activation Function in DIN,which can be viewed as a generalization of PReLu and can adaptively adjust the rectified point according to distribution of input data.
 
       Input shape
@@ -49,9 +38,9 @@ class Dice(Layer):
         super(Dice, self).__init__(**kwargs)
 
     def build(self, input_shape):
-        self.bn = BatchNormalization(
+        self.bn = tf.keras.layers.BatchNormalization(
             axis=self.axis, epsilon=self.epsilon, center=False, scale=False)
-        self.alphas = self.add_weight(shape=(input_shape[-1],), initializer=Zeros(
+        self.alphas = self.add_weight(shape=(input_shape[-1],), initializer=tf.initializers.Zeros(
         ), dtype=tf.float32, name='dice_alpha')  # name='alpha_'+self.name
         super(Dice, self).build(input_shape)  # Be sure to call this somewhere!
         self.uses_learning_phase = True
@@ -76,8 +65,8 @@ def activation_layer(activation):
     if activation in ("dice", "Dice"):
         act_layer = Dice()
     elif isinstance(activation, (str, unicode)):
-        act_layer = Activation(activation)
-    elif issubclass(activation, Layer):
+        act_layer = tf.keras.layers.Activation(activation)
+    elif issubclass(activation, tf.keras.layers.Layer):
         act_layer = activation()
     else:
         raise ValueError(

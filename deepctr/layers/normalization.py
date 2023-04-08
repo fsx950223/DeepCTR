@@ -5,17 +5,11 @@ Author:
     Weichen Shen,weichenswc@163.com
 
 """
-
-from tensorflow.python.keras import backend as K
-from tensorflow.python.keras.layers import Layer
-
-try:
-    from tensorflow.python.ops.init_ops import Zeros, Ones
-except ImportError:
-    from tensorflow.python.ops.init_ops_v2 import Zeros, Ones
+import tensorflow as tf
+K = tf.keras.backend
 
 
-class LayerNormalization(Layer):
+class LayerNormalization(tf.keras.layers.Layer):
     def __init__(self, axis=-1, eps=1e-9, center=True,
                  scale=True, **kwargs):
         self.axis = axis
@@ -26,9 +20,9 @@ class LayerNormalization(Layer):
 
     def build(self, input_shape):
         self.gamma = self.add_weight(name='gamma', shape=input_shape[-1:],
-                                     initializer=Ones(), trainable=True)
+                                     initializer=tf.initializers.Ones(), trainable=True)
         self.beta = self.add_weight(name='beta', shape=input_shape[-1:],
-                                    initializer=Zeros(), trainable=True)
+                                    initializer=tf.initializers.Zeros(), trainable=True)
         super(LayerNormalization, self).build(input_shape)
 
     def call(self, inputs):

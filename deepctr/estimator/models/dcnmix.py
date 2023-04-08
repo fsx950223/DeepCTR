@@ -6,7 +6,7 @@ Author:
 Reference:
     [1] Wang R, Fu B, Fu G, et al. Deep & cross network for ad click predictions[C]//Proceedings of the ADKDD'17. ACM, 2017: 12. (https://arxiv.org/abs/1708.05123)
 """
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 
 from ..feature_column import get_linear_logit, input_from_feature_columns
 from ..utils import deepctr_model_fn, DNN_SCOPE_NAME, variable_scope

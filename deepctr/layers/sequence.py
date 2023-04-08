@@ -8,7 +8,7 @@ Author:
 
 import numpy as np
 import tensorflow as tf
-from tensorflow.python.keras import backend as K
+K = tf.keras.backend
 
 try:
     from tensorflow.python.ops.init_ops import TruncatedNormal, Constant, glorot_uniform_initializer as glorot_uniform
@@ -28,7 +28,7 @@ from ..contrib.utils import QAAttGRUCell, VecAttGRUCell
 from .utils import reduce_sum, reduce_max, div, softmax, reduce_mean
 
 
-class SequencePoolingLayer(Layer):
+class SequencePoolingLayer(tf.keras.layers.Layer):
     """The SequencePoolingLayer is used to apply pooling operation(sum,mean,max) on variable-length sequence feature/multi-value feature.
 
       Input shape
@@ -110,7 +110,7 @@ class SequencePoolingLayer(Layer):
         return dict(list(base_config.items()) + list(config.items()))
 
 
-class WeightedSequenceLayer(Layer):
+class WeightedSequenceLayer(tf.keras.layers.Layer):
     """The WeightedSequenceLayer is used to apply weight score on variable-length sequence feature/multi-value feature.
 
       Input shape

@@ -8,9 +8,7 @@ Author:
 
 from collections import defaultdict
 from itertools import chain
-
-from tensorflow.python.keras.layers import Embedding, Lambda
-from tensorflow.python.keras.regularizers import l2
+import tensorflow as tf
 
 from .layers.sequence import SequencePoolingLayer, WeightedSequenceLayer
 from .layers.utils import Hash
@@ -24,9 +22,9 @@ def create_embedding_dict(sparse_feature_columns, varlen_sparse_feature_columns,
                           prefix='sparse_', seq_mask_zero=True):
     sparse_embedding = {}
     for feat in sparse_feature_columns:
-        emb = Embedding(feat.vocabulary_size, feat.embedding_dim,
+        emb = tf.keras.layers.Embedding(feat.vocabulary_size, feat.embedding_dim,
                         embeddings_initializer=feat.embeddings_initializer,
-                        embeddings_regularizer=l2(l2_reg),
+                        embeddings_regularizer=tf.keras.regularizers.l2(l2_reg),
                         name=prefix + '_emb_' + feat.embedding_name)
         emb.trainable = feat.trainable
         sparse_embedding[feat.embedding_name] = emb
@@ -34,9 +32,9 @@ def create_embedding_dict(sparse_feature_columns, varlen_sparse_feature_columns,
     if varlen_sparse_feature_columns and len(varlen_sparse_feature_columns) > 0:
         for feat in varlen_sparse_feature_columns:
             # if feat.name not in sparse_embedding:
-            emb = Embedding(feat.vocabulary_size, feat.embedding_dim,
+            emb = tf.keras.layers.Embedding(feat.vocabulary_size, feat.embedding_dim,
                             embeddings_initializer=feat.embeddings_initializer,
-                            embeddings_regularizer=l2(
+                            embeddings_regularizer=tf.keras.regularizers.l2(
                                 l2_reg),
                             name=prefix + '_seq_emb_' + feat.name,
                             mask_zero=seq_mask_zero)
@@ -141,7 +139,7 @@ def get_dense_input(features, feature_columns):
         if fc.transform_fn is None:
             dense_input_list.append(features[fc.name])
         else:
-            transform_result = Lambda(fc.transform_fn)(features[fc.name])
+            transform_result = tf.keras.layers.Lambda(fc.transform_fn)(features[fc.name])
             dense_input_list.append(transform_result)
     return dense_input_list
 

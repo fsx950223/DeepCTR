@@ -11,8 +11,7 @@ Authors:
 import itertools
 
 import tensorflow as tf
-from tensorflow.python.keras import backend as K
-from tensorflow.python.keras.backend import batch_dot
+K = tf.keras.backend
 
 try:
     from tensorflow.python.ops.init_ops import Zeros, Ones, Constant, TruncatedNormal, \
@@ -429,7 +428,7 @@ class CrossNet(Layer):
         return input_shape
 
 
-class CrossNetMix(Layer):
+class CrossNetMix(tf.keras.layers.Layer):
     """The Cross Network part of DCN-Mix model, which improves DCN-M by:
       1 add MOE to learn feature interactions in different subspaces
       2 add nonlinear transformations in low-dimensional space
@@ -474,30 +473,30 @@ class CrossNetMix(Layer):
         # U: (dim, low_rank)
         self.U_list = [self.add_weight(name='U_list' + str(i),
                                        shape=(self.num_experts, dim, self.low_rank),
-                                       initializer=glorot_normal(
+                                       initializer=tf.initializers.glorot_normal(
                                            seed=self.seed),
-                                       regularizer=l2(self.l2_reg),
+                                       regularizer=tf.keras.regularizers.l2(self.l2_reg),
                                        trainable=True) for i in range(self.layer_num)]
         # V: (dim, low_rank)
         self.V_list = [self.add_weight(name='V_list' + str(i),
                                        shape=(self.num_experts, dim, self.low_rank),
-                                       initializer=glorot_normal(
+                                       initializer=tf.initializers.glorot_normal(
                                            seed=self.seed),
-                                       regularizer=l2(self.l2_reg),
+                                       regularizer=tf.keras.regularizers.l2(self.l2_reg),
                                        trainable=True) for i in range(self.layer_num)]
         # C: (low_rank, low_rank)
         self.C_list = [self.add_weight(name='C_list' + str(i),
                                        shape=(self.num_experts, self.low_rank, self.low_rank),
-                                       initializer=glorot_normal(
+                                       initializer=tf.initializers.glorot_normal(
                                            seed=self.seed),
-                                       regularizer=l2(self.l2_reg),
+                                       regularizer=tf.keras.regularizers.l2(self.l2_reg),
                                        trainable=True) for i in range(self.layer_num)]
 
-        self.gating = [Dense(1, use_bias=False) for i in range(self.num_experts)]
+        self.gating = [tf.keras.layers.Dense(1, use_bias=False) for i in range(self.num_experts)]
 
         self.bias = [self.add_weight(name='bias' + str(i),
                                      shape=(dim, 1),
-                                     initializer=Zeros(),
+                                     initializer=tf.initializers.Zeros(),
                                      trainable=True) for i in range(self.layer_num)]
         # Be sure to call this somewhere!
         super(CrossNetMix, self).build(input_shape)
@@ -1342,7 +1341,7 @@ class FieldWiseBiInteraction(Layer):
         return base_config
 
 
-class FwFMLayer(Layer):
+class FwFMLayer(tf.keras.layers.Layer):
     """Field-weighted Factorization Machines
 
       Input shape
@@ -1376,8 +1375,8 @@ class FwFMLayer(Layer):
 
         self.field_strengths = self.add_weight(name='field_pair_strengths',
                                                shape=(self.num_fields, self.num_fields),
-                                               initializer=TruncatedNormal(),
-                                               regularizer=l2(self.regularizer),
+                                               initializer=tf.initializers.TruncatedNormal(),
+                                               regularizer=tf.keras.regularizers.l2(self.regularizer),
                                                trainable=True)
 
         super(FwFMLayer, self).build(input_shape)  # Be sure to call this somewhere!
@@ -1401,7 +1400,7 @@ class FwFMLayer(Layer):
             feat_embed_i = tf.squeeze(inputs[0:, fi:fi + 1, 0:], axis=1)
             feat_embed_j = tf.squeeze(inputs[0:, fj:fj + 1, 0:], axis=1)
 
-            f = tf.scalar_mul(r_ij, batch_dot(feat_embed_i, feat_embed_j, axes=1))
+            f = tf.scalar_mul(r_ij, K.batch_dot(feat_embed_i, feat_embed_j, axes=1))
             pairwise_inner_prods.append(f)
 
         sum_ = tf.add_n(pairwise_inner_prods)
@@ -1475,7 +1474,7 @@ class FEFMLayer(Layer):
 
             feat_embed_i_tr = tf.matmul(feat_embed_i, field_pair_embed_ij + tf.transpose(field_pair_embed_ij))
 
-            f = batch_dot(feat_embed_i_tr, feat_embed_j, axes=1)
+            f = K.batch_dot(feat_embed_i_tr, feat_embed_j, axes=1)
             pairwise_inner_prods.append(f)
 
         concat_vec = tf.concat(pairwise_inner_prods, axis=1)

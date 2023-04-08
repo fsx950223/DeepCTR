@@ -1,4 +1,4 @@
-import tensorflow.compat.v1 as tf
+import tensorflow as tf
 
 
 def input_fn_pandas(df, features, label=None, batch_size=256, num_epochs=1, shuffle=False, queue_capacity_factor=10,
@@ -8,7 +8,7 @@ def input_fn_pandas(df, features, label=None, batch_size=256, num_epochs=1, shuf
     else:
         y = None
 
-    return tf.estimator.inputs.pandas_input_fn(df[features], y, batch_size=batch_size, num_epochs=num_epochs,
+    return tf.compat.v1.estimator.inputs.pandas_input_fn(df[features], y, batch_size=batch_size, num_epochs=num_epochs,
                                                shuffle=shuffle, queue_capacity=batch_size * queue_capacity_factor,
                                                num_threads=num_threads)
 

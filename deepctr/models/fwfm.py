@@ -8,12 +8,8 @@ Reference:
     (https://arxiv.org/pdf/1806.03514.pdf)
 
 """
-
+import tensorflow as tf
 from itertools import chain
-
-from tensorflow.python.keras.models import Model
-from tensorflow.python.keras.layers import Dense
-
 from ..feature_column import build_input_features, get_linear_logit, DEFAULT_GROUP_NAME, input_from_feature_columns
 from ..layers.core import PredictionLayer, DNN
 from ..layers.interaction import FwFMLayer
@@ -62,11 +58,11 @@ def FwFM(linear_feature_columns, dnn_feature_columns, fm_group=(DEFAULT_GROUP_NA
         dnn_input = combined_dnn_input(list(chain.from_iterable(
             group_embedding_dict.values())), dense_value_list)
         dnn_output = DNN(dnn_hidden_units, dnn_activation, l2_reg_dnn, dnn_dropout, dnn_use_bn, seed=seed)(dnn_input)
-        dnn_logit = Dense(1, use_bias=False)(dnn_output)
+        dnn_logit = tf.keras.layers.Dense(1, use_bias=False)(dnn_output)
         final_logit_components.append(dnn_logit)
 
     final_logit = add_func(final_logit_components)
 
     output = PredictionLayer(task)(final_logit)
-    model = Model(inputs=inputs_list, outputs=output)
+    model = tf.keras.Model(inputs=inputs_list, outputs=output)
     return model

@@ -14,13 +14,7 @@ try:
 except ImportError:
     from tensorflow.python.ops.init_ops import Zeros, Ones, glorot_normal_initializer as glorot_normal
 
-from tensorflow.python.keras.layers import Layer, Dropout
-
-try:
-    from tensorflow.python.keras.layers import BatchNormalization
-except ImportError:
-    BatchNormalization = tf.keras.layers.BatchNormalization
-from tensorflow.python.keras.regularizers import l2
+from tensorflow.python.keras.layers import Layer
 
 from .activation import activation_layer
 
@@ -120,7 +114,7 @@ class LocalActivationUnit(Layer):
         return dict(list(base_config.items()) + list(config.items()))
 
 
-class DNN(Layer):
+class DNN(tf.keras.layers.Layer):
     """The Multi Layer Percetron
 
       Input shape
@@ -165,18 +159,18 @@ class DNN(Layer):
         self.kernels = [self.add_weight(name='kernel' + str(i),
                                         shape=(
                                             hidden_units[i], hidden_units[i + 1]),
-                                        initializer=glorot_normal(
+                                        initializer=tf.initializers.glorot_normal(
                                             seed=self.seed),
-                                        regularizer=l2(self.l2_reg),
+                                        regularizer=tf.keras.regularizers.l2(self.l2_reg),
                                         trainable=True) for i in range(len(self.hidden_units))]
         self.bias = [self.add_weight(name='bias' + str(i),
                                      shape=(self.hidden_units[i],),
-                                     initializer=Zeros(),
+                                     initializer=tf.initializers.Zeros(),
                                      trainable=True) for i in range(len(self.hidden_units))]
         if self.use_bn:
-            self.bn_layers = [BatchNormalization() for _ in range(len(self.hidden_units))]
+            self.bn_layers = [tf.keras.layers.BatchNormalization() for _ in range(len(self.hidden_units))]
 
-        self.dropout_layers = [Dropout(self.dropout_rate, seed=self.seed + i) for i in
+        self.dropout_layers = [tf.keras.layers.Dropout(self.dropout_rate, seed=self.seed + i) for i in
                                range(len(self.hidden_units))]
 
         self.activation_layers = [activation_layer(self.activation) for _ in range(len(self.hidden_units))]
@@ -223,7 +217,7 @@ class DNN(Layer):
         return dict(list(base_config.items()) + list(config.items()))
 
 
-class PredictionLayer(Layer):
+class PredictionLayer(tf.keras.layers.Layer):
     """
       Arguments
          - **task**: str, ``"binary"`` for  binary logloss or  ``"regression"`` for regression loss
@@ -242,7 +236,7 @@ class PredictionLayer(Layer):
 
         if self.use_bias:
             self.global_bias = self.add_weight(
-                shape=(1,), initializer=Zeros(), name="global_bias")
+                shape=(1,), initializer=tf.keras.initializers.Zeros(), name="global_bias")
 
         # Be sure to call this somewhere!
         super(PredictionLayer, self).build(input_shape)

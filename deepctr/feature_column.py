@@ -3,9 +3,6 @@ from collections import namedtuple, OrderedDict
 from copy import copy
 from itertools import chain
 
-from tensorflow.python.keras.initializers import RandomNormal, Zeros
-from tensorflow.python.keras.layers import Input, Lambda
-
 from .inputs import create_embedding_matrix, embedding_lookup, get_dense_input, varlen_embedding_lookup, \
     get_varlen_pooling_list, mergeDict
 from .layers import Linear
@@ -27,7 +24,7 @@ class SparseFeat(namedtuple('SparseFeat',
         if embedding_dim == "auto":
             embedding_dim = 6 * int(pow(vocabulary_size, 0.25))
         if embeddings_initializer is None:
-            embeddings_initializer = RandomNormal(mean=0.0, stddev=0.0001, seed=2020)
+            embeddings_initializer = tf.initializers.RandomNormal(mean=0.0, stddev=0.0001, seed=2020)
 
         if embedding_name is None:
             embedding_name = name
@@ -129,19 +126,19 @@ def build_input_features(feature_columns, prefix=''):
     input_features = OrderedDict()
     for fc in feature_columns:
         if isinstance(fc, SparseFeat):
-            input_features[fc.name] = Input(
+            input_features[fc.name] = tf.keras.Input(
                 shape=(1,), name=prefix + fc.name, dtype=fc.dtype)
         elif isinstance(fc, DenseFeat):
-            input_features[fc.name] = Input(
+            input_features[fc.name] = tf.keras.Input(
                 shape=(fc.dimension,), name=prefix + fc.name, dtype=fc.dtype)
         elif isinstance(fc, VarLenSparseFeat):
-            input_features[fc.name] = Input(shape=(fc.maxlen,), name=prefix + fc.name,
+            input_features[fc.name] = tf.keras.Input(shape=(fc.maxlen,), name=prefix + fc.name,
                                             dtype=fc.dtype)
             if fc.weight_name is not None:
-                input_features[fc.weight_name] = Input(shape=(fc.maxlen, 1), name=prefix + fc.weight_name,
+                input_features[fc.weight_name] = tf.keras.Input(shape=(fc.maxlen, 1), name=prefix + fc.weight_name,
                                                        dtype="float32")
             if fc.length_name is not None:
-                input_features[fc.length_name] = Input((1,), name=prefix + fc.length_name, dtype='int32')
+                input_features[fc.length_name] = tf.keras.Input((1,), name=prefix + fc.length_name, dtype='int32')
 
         else:
             raise TypeError("Invalid feature column type,got", type(fc))
@@ -155,11 +152,11 @@ def get_linear_logit(features, feature_columns, units=1, use_bias=False, seed=10
     for i in range(len(linear_feature_columns)):
         if isinstance(linear_feature_columns[i], SparseFeat):
             linear_feature_columns[i] = linear_feature_columns[i]._replace(embedding_dim=1,
-                                                                           embeddings_initializer=Zeros())
+                                                                           embeddings_initializer=tf.initializers.Zeros())
         if isinstance(linear_feature_columns[i], VarLenSparseFeat):
             linear_feature_columns[i] = linear_feature_columns[i]._replace(
                 sparsefeat=linear_feature_columns[i].sparsefeat._replace(embedding_dim=1,
-                                                                         embeddings_initializer=Zeros()))
+                                                                         embeddings_initializer=tf.initializers.Zeros()))
 
     linear_emb_list = [input_from_feature_columns(features, linear_feature_columns, l2_reg, seed,
                                                   prefix=prefix + str(i))[0] for i in range(units)]
@@ -172,20 +169,20 @@ def get_linear_logit(features, feature_columns, units=1, use_bias=False, seed=10
             sparse_input = concat_func(linear_emb_list[i])
             dense_input = concat_func(dense_input_list)
             if sparse_feat_refine_weight is not None:
-                sparse_input = Lambda(lambda x: x[0] * tf.expand_dims(x[1], axis=1))(
+                sparse_input = tf.keras.layers.Lambda(lambda x: x[0] * tf.expand_dims(x[1], axis=1))(
                     [sparse_input, sparse_feat_refine_weight])
             linear_logit = Linear(l2_reg, mode=2, use_bias=use_bias, seed=seed)([sparse_input, dense_input])
         elif len(linear_emb_list[i]) > 0:
             sparse_input = concat_func(linear_emb_list[i])
             if sparse_feat_refine_weight is not None:
-                sparse_input = Lambda(lambda x: x[0] * tf.expand_dims(x[1], axis=1))(
+                sparse_input = tf.keras.layers.Lambda(lambda x: x[0] * tf.expand_dims(x[1], axis=1))(
                     [sparse_input, sparse_feat_refine_weight])
             linear_logit = Linear(l2_reg, mode=0, use_bias=use_bias, seed=seed)(sparse_input)
         elif len(dense_input_list) > 0:
             dense_input = concat_func(dense_input_list)
             linear_logit = Linear(l2_reg, mode=1, use_bias=use_bias, seed=seed)(dense_input)
         else:   #empty feature_columns
-            return Lambda(lambda x: tf.constant([[0.0]]))(list(features.values())[0])
+            return tf.keras.layers.Lambda(lambda x: tf.constant([[0.0]]))(list(features.values())[0])
         linear_logit_list.append(linear_logit)
 
     return concat_func(linear_logit_list)
