@@ -113,13 +113,13 @@ if __name__ == "__main__":
             self.start_time = time.perf_counter()
             return super().on_epoch_begin(epoch, logs)
 
-        def on_epoch_end(self, batch, logs=None):
+        def on_epoch_end(self, epoch, logs=None):
             self.total_times.append(time.perf_counter() - self.start_time)
-            return super().on_epoch_end(batch, logs)
+            return super().on_epoch_end(epoch, logs)
         
     perf_time = PerformanceTime()
     model.fit(train_dataset, epochs=args.epochs, validation_data=test_dataset, steps_per_epoch=args.num_batch, validation_steps=0, callbacks=[perf_time])
-    throughout = 64000 * (args.epochs - 5) / sum(perf_time.total_times[5: ])
+    throughout = args.batch_size * args.num_batch * (args.epochs - 5) / sum(perf_time.total_times[5: ])
     print('###### throughout = %.2f (examples/s)'%(throughout))
     exit(0)
 

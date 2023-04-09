@@ -35,7 +35,7 @@ def input_fn_tfrecord(filenames, feature_description, label=None, batch_size=256
         if shuffle_factor > 0:
             dataset = dataset.shuffle(buffer_size=batch_size * shuffle_factor, reshuffle_each_iteration=False)
 
-        dataset = dataset.repeat(num_epochs).batch(batch_size, drop_remainder=True)
+        dataset = dataset.repeat().batch(batch_size, drop_remainder=True)
         
         if prefetch_factor > 0:
             dataset = dataset.prefetch(buffer_size=batch_size * prefetch_factor)
