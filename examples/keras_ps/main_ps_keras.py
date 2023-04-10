@@ -1,20 +1,10 @@
-
-import tensorflow as tf
-tf.debugging.enable_traceback_filtering()
 import os
 import time
-from deepctr.models import FwFM, DCNMix
-from deepctr.feature_column import SparseFeat, DenseFeat
+import tensorflow as tf
+tf.debugging.enable_traceback_filtering()
 
-from deepctr.estimator.inputs import input_fn_tfrecord
-
-from virtual_data_generator import gen_data_df
-from utils import time_callback, pd_to_tfrecord
-from config import parse_args
 
 if __name__ == "__main__":
-    
-    args = parse_args()
     cluster_resolver = tf.distribute.cluster_resolver.TFConfigClusterResolver()
     if cluster_resolver.task_type in ("worker", "ps"):
         os.environ["GRPC_FAIL_FAST"] = "use_caller"
@@ -27,6 +17,15 @@ if __name__ == "__main__":
         server.join()
         exit(0)
 
+    from deepctr.models import FwFM, DCNMix
+    from deepctr.feature_column import SparseFeat, DenseFeat
+
+    from deepctr.estimator.inputs import input_fn_tfrecord
+
+    from virtual_data_generator import gen_data_df
+    from utils import time_callback, pd_to_tfrecord
+    from config import parse_args       
+    args = parse_args()
     ###os.environ['CUDA_VISIBLE_DEVICES'] = '0,1,2,3,4,5' # 指定该代码文件的可见GPU为第一个和第二个
     # os.environ['CUDA_VISIBLE_DEVICES'] = cuda_visible_devices # 指定该代码文件的可见GPU为第一个和第二个
     # os.environ['HIP_VISIBLE_DEVICES'] = cuda_visible_devices # 指定该代码文件的可见GPU为第一个和第二个

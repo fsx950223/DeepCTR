@@ -26,7 +26,7 @@ def main():
         procs.append(subprocess.run(f"python3 main_ps_keras.py &", shell=True, env=dict(TF_CONFIG=json.dumps(config_dict), HIP_VISIBLE_DEVICES='-1')))
 
     config_dict['task'] = {'type': 'chief', 'index': 0}
-    subprocess.run(f"python3 main_ps_keras.py --epochs={args.epochs} --batch_size={args.batch_size * WORKERS} --num_batch={args.num_batch} --embedding_dims={args.embedding_dims} --embedding_hash_size={args.embedding_hash_size}", shell=True, env=dict(TF_CONFIG=json.dumps(config_dict), HIP_VISIBLE_DEVICES='-1'))
+    subprocess.run(f"python3 main_ps_keras.py --epochs={args.epochs} --batch_size={args.batch_size * WORKERS} --num_batch={args.num_batch} --embedding_dims={args.embedding_dims} --embedding_hash_size={args.embedding_hash_size}", shell=True, env=dict(TF_CONFIG=json.dumps(config_dict), HIP_VISIBLE_DEVICES='-1', PYTHONPATH='../../'))
     subprocess.run(f"kill -9 ```pidof python3 main_ps_keras.py```", shell=True)
 
 main()
